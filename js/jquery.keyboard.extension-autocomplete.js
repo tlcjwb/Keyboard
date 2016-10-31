@@ -124,7 +124,9 @@ $.fn.addAutocomplete = function(options) {
 			if (base.hasAutocomplete) {
 				base.$preview.bind('keydown' + namespace, function(e) {
 					// send keys to the autocomplete widget (arrow, pageup/down, etc)
-					base.$el.val( base.$preview.val() ).triggerHandler(e);
+					if (base.$el != base.$preview) {
+						base.$el.val( base.$preview.val() ).triggerHandler(e);
+					}
 				});
 				var events = 'mouseup mousedown mouseleave touchstart touchend touchcancel '
 					.split(' ')

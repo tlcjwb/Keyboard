@@ -757,14 +757,23 @@ http://www.opensource.org/licenses/mit-license.php
 					// redo (ctrl-y)& undo (ctrl-z); meta key for mac
 					return;
 				}
+
 				// Mapped Keys - allows typing on a regular keyboard and the mapped key is entered
+				// Use the actual keycode since we are emulating a physical keyboard
 				// Set up a key in the layout as follows: 'm(a):label'; m = key to map, (a) = actual keyboard key
 				// to map to (optional), ':label' = title/tooltip (optional)
 				// example: \u0391 or \u0391(A) or \u0391:alpha or \u0391(A):alpha
-				if (layout.hasMappedKeys && layout.mappedKeys.hasOwnProperty(str)) {
-					base.last.key = layout.mappedKeys[str];
-					base.insertText(base.last.key);
-					e.preventDefault();
+				if (layout.hasMappedKeys) {
+					var keyPressed = String.fromCharCode(base.last.keyTyped).toLowerCase();
+					var modifier = (e.altKey ? 'alt-' : '') + (e.shiftKey ? 'shift-' : '');
+					var byChar = modifier + keyPressed;
+					var byCode = modifier + base.last.keyTyped;
+	
+					if (layout.mappedKeys.hasOwnProperty(byChar) || layout.mappedKeys.hasOwnProperty(byCode)) {
+						base.last.key = layout.mappedKeys[byChar] || layout.mappedKeys[byCode];
+						base.insertText(base.last.key);
+						e.preventDefault();
+					}
 				}
 				if (typeof o.beforeInsert === 'function') {
 					base.insertText(base.last.key);
@@ -853,6 +862,8 @@ http://www.opensource.org/licenses/mit-license.php
 				}
 
 				base.last.virtual = false;
+				base.last.keyTyped = e.which;
+
 				switch (e.which) {
 
 				case keyCodes.backSpace:
@@ -1541,10 +1552,10 @@ http://www.opensource.org/licenses/mit-license.php
 				.trigger((o.alwaysOpen) ? kbevents.kbInactive : kbevents.kbHidden, [base, base.el])
 				.blur();
 
-			// save caret after updating value (fixes userClosed issue with changing focus)
-			$keyboard.caret(base.$preview, base.last);
 			// base is undefined if keyboard was destroyed - fixes #358
 			if (base) {
+				// save caret after updating value (fixes userClosed issue with changing focus)
+				$keyboard.caret(base.$preview, base.last);
 				// add close event time
 				base.last.eventTime = new Date().getTime();
 				if (!(o.alwaysOpen || o.userClosed && accepted === 'true') && base.$keyboard.length) {
